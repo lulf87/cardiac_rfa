@@ -1,0 +1,7 @@
+power_W: 90.0
+duration_s: 4.0
+wall_thickness_mm: 4.0
+lesion_depth_mm: 0.9666666666666667
+transmural: false
+overheat_area_mm2: 0.21333333333333204
+peak_temperature_C: 132.1843127838419

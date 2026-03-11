@@ -1,0 +1,12 @@
+wall_thickness_mm_values: [2.0, 3.0, 4.0, 6.0]
+cooling_h_W_per_m2K_values: [800.0, 1500.0, 2500.0]
+insertion_depth_mm_values: [0.5, 1.0, 1.5, 2.0]
+samples_per_cell: 8
+insertion_sd_mm: 0.20
+insertion_min_mm: 0.25
+insertion_max_mm: 2.50
+cooling_cv: 0.15
+cooling_min_W_per_m2K: 300.0
+cooling_max_W_per_m2K: 4000.0
+overheat_threshold_C: 100.0
+seed: 20260311

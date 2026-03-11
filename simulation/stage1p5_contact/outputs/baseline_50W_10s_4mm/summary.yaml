@@ -1,0 +1,15 @@
+power_W: 50.0
+duration_s: 10.0
+wall_thickness_mm: 4.0
+bottom_buffer_mm: 4.0
+cooling_h_W_per_m2K: 1500.0
+insertion_depth_mm: 1.0
+nx: 281
+ny: 141
+dt_s: 0.05
+source_smoothing_mm: 0.2
+lesion_depth_mm: 1.7641540057025002
+depth_fraction: 0.44103850142562506
+transmural: false
+overheat_area_mm2: 0.0
+peak_temperature_C: 72.13923982573938

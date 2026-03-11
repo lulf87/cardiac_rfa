@@ -1,0 +1,8 @@
+grid_cases:
+  - nx: 201
+    ny: 101
+  - nx: 281
+    ny: 141
+  - nx: 361
+    ny: 181
+dt_values_s: [0.1, 0.05, 0.025]

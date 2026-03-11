@@ -1,0 +1,4 @@
+name,transmural_probability_mean,transmural_probability_max,overheat_probability_mean,overheat_probability_max,depth_fraction_p50_mean,depth_fraction_p50_max
+hpsd_50W_10s,0.1484375,1.0,0.018229166666666668,0.5,0.5901176185938583,1.0
+standard_30W_30s,0.4036458333333333,1.0,0.0,0.0,0.7816431208378046,1.0
+vhpsd_90W_4s,0.0,0.0,0.20052083333333334,1.0,0.4469059942836457,0.8866879076696641

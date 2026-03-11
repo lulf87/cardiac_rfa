@@ -1,0 +1,10 @@
+protocols:
+  - name: standard_30W_30s
+    power_W: 30
+    duration_s: 30
+  - name: hpsd_50W_10s
+    power_W: 50
+    duration_s: 10
+  - name: vhpsd_90W_4s
+    power_W: 90
+    duration_s: 4
