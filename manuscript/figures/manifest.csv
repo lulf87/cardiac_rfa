@@ -1,0 +1,11 @@
+figure_id,category,preferred_file,notes
+fig1_model_workflow,main,pdf,schematic/workflow
+fig2_representative_fields,main,pdf,field maps + contours
+fig3_deterministic_summary,main,pdf,deterministic summary
+fig4_verification,main,pdf,grid and time-step refinement
+fig5_transmural_probability_maps,main,pdf,main probability matrix
+fig6_overheat_probability_maps,main,pdf,main overheating matrix
+fig7_tradeoff_depthrisk,main,pdf,summary trade-off
+fig8_literature_benchmark,main,pdf,to be regenerated after benchmark CSV is finalized
+figS1_depth_fraction_p50_maps,supplement,pdf,median depth fraction maps
+figS2_tradeoff_ptrans_pover,supplement,pdf,backup trade-off view
