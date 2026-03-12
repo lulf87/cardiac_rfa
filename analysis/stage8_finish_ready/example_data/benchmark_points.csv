@@ -1,0 +1,4 @@
+source_id,protocol_key,reported_depth_mm,simulated_depth_mm,reported_width_mm,simulated_width_mm,notes
+example_source_A,standard_30W_30s,,,,,
+example_source_B,hpsd_50W_10s,,,,,
+example_source_C,vhpsd_90W_4s,,,,,

@@ -1,0 +1,28 @@
+background: '#F6F4EF'
+axes_face: '#FBFAF7'
+grid: '#C6CCD5'
+spine: '#556070'
+text: '#3B4861'
+chip: '#6F8090'
+chip_text: '#FFFFFF'
+protocol:
+  standard_30W_30s: '#35A091'
+  hpsd_50W_10s: '#8A7FBC'
+  vhpsd_90W_4s: '#DD7A5A'
+protocol_light:
+  standard_30W_30s: '#CFE6E0'
+  hpsd_50W_10s: '#DFDAED'
+  vhpsd_90W_4s: '#F3DDD4'
+wall:
+  '2.0': '#67C5B4'
+  '3.0': '#9ACA57'
+  '4.0': '#E6C562'
+  '6.0': '#D37F63'
+wall_label:
+  '2.0': '#D9F0EA'
+  '3.0': '#E4F2D1'
+  '4.0': '#F5EAC7'
+  '6.0': '#F2D8CF'
+cmap_prob: cividis
+cmap_overheat: magma
+cmap_depth: cividis

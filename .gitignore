@@ -5,3 +5,12 @@
 **/.pytest_cache/
 **/.ipynb_checkpoints/
 *.pyc
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+*.bz2
+*.xz
+*.7z
+*.rar

@@ -1,0 +1,4 @@
+power_W,duration_s,wall_thickness_mm,bottom_buffer_mm,cooling_h_W_per_m2K,insertion_depth_mm,nx,ny,dt_s,source_smoothing_mm,lesion_depth_mm,depth_fraction,transmural,overheat_area_mm2,peak_temperature_C,case
+50.0,10.0,4.0,4.0,1500.0,1.0,201,101,0.05,0.2,1.7321616235894066,0.4330404058973516,False,0.0,70.71706944113448,grid_201x101
+50.0,10.0,4.0,4.0,1500.0,1.0,281,141,0.05,0.2,1.7641540057025002,0.441038501425625,False,0.0,72.13923982573938,grid_281x141
+50.0,10.0,4.0,4.0,1500.0,1.0,361,181,0.05,0.2,1.762671491343396,0.440667872835849,False,0.0,72.45168392275886,grid_361x181
