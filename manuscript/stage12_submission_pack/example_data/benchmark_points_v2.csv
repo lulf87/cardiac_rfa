@@ -1,4 +1,0 @@
-source_id,protocol_key,reported_depth_mm,simulated_depth_mm,reported_width_mm,simulated_width_mm,notes
-Nakagawa2021_maxDepth,standard_30W_30s,6.6,2.755,10.7,,Protocol-level starter benchmark from literature abstract
-Nakagawa2021_maxDepth,hpsd_50W_10s,4.9,1.764,9.2,,Protocol-level starter benchmark from literature abstract
-Nakagawa2021_maxDepth,vhpsd_90W_4s,3.6,1.302,8.2,,Protocol-level starter benchmark from literature abstract
