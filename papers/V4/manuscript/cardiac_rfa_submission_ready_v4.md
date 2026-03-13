@@ -1,0 +1,227 @@
+---
+title: "Uncertainty-aware reduced 2D electro-thermal modeling of transmural lesion formation during radiofrequency cardiac ablation under uncertain contact and cooling conditions"
+author:
+  - "Author names and affiliations to be added by the authors"
+date: ""
+geometry: margin=1in
+fontsize: 11pt
+---
+
+**Corresponding author:** to be added.
+
+## Abstract
+
+**Background:** Reduced-complexity computational models may enable interpretable comparison of radiofrequency (RF) ablation protocols under uncertain catheter-tissue contact and cooling conditions, but these models must report their assumptions and probability-estimation uncertainty transparently.
+
+**Objective:** To develop and test a two-dimensional electro-thermal lesion model for comparative assessment of standard RF, high-power short-duration (HPSD), and very-high-power short-duration (vHPSD) protocols across wall thickness, contact surrogate, and cooling conditions.
+
+**Methods:** A reduced electrode-blood-myocardium model was implemented using a quasi-static electrical solve, transient bioheat transfer, and Arrhenius thermal damage. Deterministic sweeps were performed over protocol, wall thickness, insertion depth as a contact surrogate, and effective convective cooling coefficient. Model outputs included lesion depth, maximum width, lesion area, depth fraction, depth-to-width ratio, peak temperature, transmurality, and an overheating proxy based on temperatures at or above 100 °C. Uncertainty propagation treated insertion depth and cooling as truncated-normal variables and used 64 samples per nominal cell; transmurality and overheating probabilities were reported with 95% Wilson-score confidence intervals.
+
+**Results:** Across the deterministic sweeps, lesion penetration ranked standard RF > HPSD > vHPSD, and this ordering was mirrored by maximum width and lesion area. In the uncertainty-aware maps, standard RF occupied the broadest transmurality-success region, HPSD reached an intermediate regime concentrated in thin-wall settings, and vHPSD remained non-transmural across the scanned cells while showing the greatest overheating susceptibility under thin-wall, weak-cooling, high-contact conditions. Median Wilson-score half-widths were 0.028 for transmurality probability and 0.028 for overheating probability, with maxima of 0.113 and 0.119, respectively. A literature-derived benchmark reproduced the protocol-level ranking reported experimentally but underestimated absolute lesion depth under the nominal reduced-model setup.
+
+**Conclusions:** The proposed reduced 2D framework provides a low-cost, interpretable approach for comparative lesion mapping and uncertainty-aware risk visualization. Under the present model assumptions, standard RF retained the highest transmural potential, HPSD occupied an intermediate regime, and vHPSD remained shallowest while showing the strongest overheating susceptibility. The framework is intended for methodology-focused comparative analysis rather than patient-specific lesion prediction.
+
+**Keywords:** radiofrequency catheter ablation; electro-thermal modeling; uncertainty quantification; transmural lesion formation; HPSD; vHPSD
+
+## 1. Introduction
+
+Radiofrequency catheter ablation is widely used to create controlled thermal lesions in cardiac tissue, with the practical objective of achieving durable conduction block while avoiding collateral injury. Lesion formation depends on the interplay among protocol, tissue thickness, surface cooling, and catheter-tissue contact. These dependencies have motivated extensive computational work over the last three decades, spanning classical bioheat implementations, detailed multiphysics models, and recent protocol-comparison studies in high-power short-duration ablation [1-4].
+
+Short-duration high-power strategies have intensified interest in protocol-specific trade-offs. Experimental comparisons have shown that shorter, higher-power applications can produce shallower lesions than longer conventional applications, even when the overall lesion footprint remains clinically useful [3]. In a temperature-controlled vHPSD setting, lesion size may also saturate with increasing contact force once contact reaches approximately 15 g, suggesting that increasingly aggressive contact does not necessarily yield proportionally deeper lesions [4]. These observations motivate computational frameworks that can map both efficacy-oriented quantities such as lesion penetration and risk-oriented quantities such as overheating susceptibility.
+
+A practical difficulty is that high-fidelity three-dimensional or fully coupled models are computationally expensive and poorly suited to broad parameter sweeps on limited hardware. For an initial methodology-focused study, a reduced two-dimensional model offers a useful compromise: it preserves the dominant electro-thermal lesion-formation mechanisms while remaining inexpensive enough for deterministic sweeps and uncertainty propagation. Previous computational work has also shown that a dynamic contact model including heartbeat-induced electrode motion can be closely approximated by an equivalent average static insertion depth, supporting the use of a reduced contact surrogate in a first-pass comparative model [2].
+
+The gap addressed here is therefore not the absence of another deterministic lesion simulator, but the lack of a compact and interpretable framework for protocol-level risk mapping under uncertain contact and cooling conditions. Electrophysiologists are often interested in questions such as the following: under what combinations of wall thickness, contact, and cooling is a protocol likely to become transmural, and under what combinations does the same protocol begin to incur non-negligible overheating risk? These questions are more naturally answered by probability maps and trade-off summaries than by single deterministic contours.
+
+Accordingly, this study develops a reduced 2D electro-thermal model to compare a standard protocol (30 W/30 s), an HPSD protocol (50 W/10 s), and a vHPSD protocol (90 W/4 s). Deterministic sweeps are first used to characterize lesion-depth and lesion-geometry trends across wall thickness, insertion depth, and cooling strength. Uncertainty propagation over contact and cooling is then used to generate transmurality-probability maps, overheating-probability maps, and depth-fraction summaries. The central hypothesis is that standard RF will retain the highest transmural potential, HPSD will occupy an intermediate regime, and vHPSD will remain shallowest while showing the strongest overheating susceptibility under thin-wall, high-contact conditions.
+
+## 2. Methods
+
+### 2.1 Reduced two-dimensional electro-thermal lesion model
+
+We considered a reduced two-dimensional cross-sectional model representing a vertically contacting ablation electrode, the adjacent blood pool at the tissue surface, the myocardial wall, and a lower thermal buffer. The aim of the model was not to reproduce catheter-specific irrigation or chamber-scale flow fields, but to provide a computationally inexpensive comparative framework for exploring how protocol choice, wall thickness, contact surrogate, and cooling intensity jointly influence lesion formation.
+
+The electrical subproblem was modeled under a quasi-static approximation,
+
+`div(sigma grad(phi)) = 0`,
+
+where `phi` is electric potential and `sigma` is electrical conductivity. Joule heating was obtained as
+
+`q_RF = sigma |grad(phi)|^2`.
+
+The thermal problem was represented using a transient bioheat formulation,
+
+`rho c dT/dt = div(k grad(T)) + q_RF - omega_b rho_b c_b (T - T_b)`,
+
+where `T` is temperature, `rho` density, `c` specific heat, and `k` thermal conductivity. In the present reduced implementation, the perfusion term was set to zero so that blood/tissue heat exchange entered primarily through the surface cooling boundary condition. Thermal injury was quantified using an Arrhenius damage integral,
+
+`Omega(t) = integral A exp(-Ea / (R T(tau))) dt`,
+
+with lesion boundary defined by `Omega >= 1`.
+
+### 2.2 Geometry and computational domain
+
+The computational domain width was 18 mm. The physical myocardial wall thickness was varied between 2 and 6 mm depending on the study arm, and an additional 4 mm lower thermal buffer was included to reduce boundary contamination. The electrode footprint at the tissue surface was represented by a 2-mm-wide top boundary segment. Lesion depth was measured only within the physical myocardial wall; the thermal buffer was excluded from lesion metrics.
+
+### 2.3 Boundary and initial conditions
+
+For the electrical problem, the lower boundary was grounded, the electrode segment at the top surface was assigned a unit potential, and the remaining top surface and lateral boundaries were electrically insulated. For the thermal problem, the side boundaries and the lower boundary were treated as zero-flux boundaries. The top surface was subject to an effective convective cooling condition with nominal coefficient `h`, representing combined blood-pool and catheter-adjacent cooling in a reduced manner. The initial temperature was 37 °C throughout the domain.
+
+### 2.4 Protocol implementation and contact surrogate
+
+Three protocol classes were compared: standard RF (30 W / 30 s), HPSD (50 W / 10 s), and vHPSD (90 W / 4 s). Insertion depth was used as a contact surrogate rather than explicit mechanical force. In the reduced model, insertion depth influenced lesion formation through two reduced mechanisms: (i) a contact-dependent source-gain term applied to the regularized Joule source, and (ii) a local reduction in the effective convective coefficient over the electrode footprint.
+
+### 2.5 Material parameters and lesion metrics
+
+Baseline material parameters were set to `sigma = 0.6 S/m`, `k = 0.55 W/m/K`, `rho = 1050 kg/m^3`, and `c = 3600 J/kg/K`. The Arrhenius parameters were `A = 7.39 × 10^39 s^-1` and `Ea = 2.577 × 10^5 J/mol`. The following outputs were reported: lesion depth, maximum lesion width, lesion area, depth fraction (depth/wall thickness), depth-to-width ratio, transmurality, peak temperature, and the area exposed to temperatures `>= 100 °C`.
+
+### 2.6 Numerical implementation and verification
+
+All simulations were implemented in Python using a finite-difference formulation. The quasi-static potential problem and the implicit heat step were solved on structured grids. Grid convergence was assessed using 201 × 101, 281 × 141, and 361 × 181 grids for the 4-mm baseline case. Time-step convergence was assessed using 0.1 s, 0.05 s, and 0.025 s. The selected production settings were 281 × 141 and `Delta t = 0.05 s`.
+
+### 2.7 Deterministic sweeps
+
+Deterministic parameter sweeps were performed across protocol, wall thickness, nominal cooling coefficient, and nominal insertion depth. Representative deterministic results were summarized using lesion depth, width, area, peak temperature, and depth-to-width ratio.
+
+### 2.8 Uncertainty quantification
+
+Uncertainty-aware analyses were performed by treating insertion depth and surface cooling coefficient as uncertain inputs. For each nominal cell in the wall-thickness × cooling × insertion × protocol grid, insertion depth and cooling coefficient were sampled independently using truncated normal distributions. Insertion depth was assigned a standard deviation of 0.20 mm and truncated to [0.25, 2.50] mm. Cooling coefficient was assigned a coefficient of variation of 0.15 and truncated to [300, 4000] W m^-2 K^-1. Stratified sampling was used to avoid repeated clustering at a small number of locations. The paper-level uncertainty maps were generated using 64 samples per cell. Probability estimates for transmurality and overheating were accompanied by 95% Wilson-score confidence intervals.
+
+### 2.9 Literature-derived benchmark
+
+Because no geometry-matched experimental data were available in the present study, external comparison was limited to a protocol-level literature-derived benchmark. The benchmark was treated as trend-level rather than strict validation, and was used to assess whether the reduced model reproduced the reported ordering of lesion depth across standard RF, HPSD, and vHPSD protocols.
+
+**Table 1. Protocol definitions used in the reduced comparative model.**
+
+| Protocol | Power (W) | Duration (s) | Nominal energy (J) | Role in study |
+|---|---:|---:|---:|---|
+| Standard RF | 30 | 30 | 900 | Reference conventional protocol |
+| HPSD | 50 | 10 | 500 | High-power short-duration comparator |
+| vHPSD | 90 | 4 | 360 | Very-high-power short-duration comparator |
+
+
+**Table 2. Solver, sweep, and uncertainty-quantification settings used for the revised paper-level results.**
+
+| Item | Value |
+|---|---|
+| Deterministic baseline grid | 281 × 141 |
+| Time step Δt | 0.050 s |
+| Wall thickness levels | 2.0, 3.0, 4.0, 5.0, 6.0 |
+| Nominal cooling levels h | 800.0, 1500.0, 2500.0 |
+| Nominal insertion levels | 0.5, 1.0, 1.5, 2.0 |
+| UQ samples per cell | 64 |
+| Insertion distribution | Truncated normal, mean = nominal, sd = 0.20 mm |
+| Insertion support | [0.25, 2.50] mm |
+| Cooling distribution | Truncated normal, mean = nominal, CV = 0.15 |
+| Cooling support | [300, 4000] W m^-2 K^-1 |
+| Probability interval | 95% Wilson score interval |
+| Overheat proxy threshold | Tmax ≥ 100 °C or non-zero area above 100 °C |
+
+
+![**Figure 1.** Reduced 2D electro-thermal model geometry and simulation workflow. Panel (a) shows the simplified electrode-blood-myocardium domain, wall thickness, insertion-depth surrogate, and lower thermal buffer. Panel (b) summarizes the sequence from electrical solve through transient bioheat and Arrhenius damage to deterministic and probabilistic outputs.](assets/fig1_model_workflow.png){ width=100% }
+
+![**Figure 2.** Representative spatial fields for the nominal case (wall thickness 4 mm, nominal cooling 1500 W m^-2 K^-1, insertion 1.0 mm). Row (a) shows temperature fields for standard RF, HPSD, and vHPSD; row (b) shows the corresponding log10 Arrhenius-damage fields. Contours indicate the lesion boundary defined by `Omega = 1`.](assets/fig2_representative_fields.png){ width=100% }
+
+## 3. Results
+
+### 3.1 Deterministic protocol comparisons
+
+Under the deterministic baseline condition (4-mm wall thickness, nominal insertion depth 1.0 mm, nominal cooling coefficient 1500 W m^-2 K^-1), lesion depth decreased from standard RF to HPSD and then to vHPSD. The same ranking was accompanied by a corresponding reduction in maximum lesion width and lesion area, while vHPSD retained the highest peak temperatures among the three protocols. For the 50 W/10 s baseline case, the revised solver reported a lesion depth of 1.764 mm, maximum width of 3.151 mm, lesion area of 4.467 mm^2, and peak temperature of 72.14 °C. These results indicate that, under the present reduced-model assumptions, the shorter high-power strategies concentrate thermal exposure near the surface but produce less deep wall penetration than the standard long-duration protocol.
+
+### 3.2 Effect of wall thickness, insertion depth, and cooling
+
+Increasing wall thickness reduced depth fraction across all protocols. Standard RF approached or reached transmurality in part of the 2-3 mm regime, whereas HPSD reached this regime only under a smaller subset of conditions and vHPSD remained predominantly subtransmural across the scanned parameter space. Increasing insertion depth increased lesion depth, maximum width, lesion area, and peak temperature for all protocols. Increasing nominal cooling reduced both lesion extent and peak temperatures. These trends were consistent across lesion depth, width, and area, indicating that the reduced model does not only rank protocols by depth but also captures systematic differences in lesion geometry.
+
+### 3.3 Numerical verification
+
+Grid and time-step studies showed that the selected production discretization provided stable deterministic metrics for the baseline case. Relative changes in lesion depth and peak temperature were small between the selected and finer settings, supporting the use of the 281 × 141 grid and `Delta t = 0.05 s` for the comparative sweeps.
+
+### 3.4 Uncertainty-aware transmurality and overheating maps
+
+The uncertainty-aware maps showed that standard RF occupied the largest transmurality-success region, HPSD occupied an intermediate region concentrated in thinner walls and stronger-contact settings, and vHPSD remained non-transmural across the scanned parameter space. Standard RF reached transmurality probabilities of 1.0 throughout much of the 2 mm wall regime and in several 3 mm cells under favorable contact/cooling conditions. HPSD also achieved high transmurality probabilities in thin-wall settings, reaching 1.0 in the 2 mm regime and 0.83 at 3 mm under weak cooling and nominal insertion. By contrast, vHPSD yielded no transmural cells in the present scan. Overheating risk followed the opposite pattern. Standard RF remained essentially free of overheating under the scanned conditions, HPSD showed a limited overheating-prone region, and vHPSD showed the largest overheating susceptibility, reaching 1.0 under thin-wall, high-contact, weak-cooling conditions.
+
+### 3.5 Confidence intervals on probability estimates
+
+For the paper-level uncertainty maps, each nominal cell was evaluated using 64 samples. Wilson-score confidence intervals were computed for all transmurality and overheating probabilities. Supplementary Figure S3 summarizes the distribution of confidence-interval half-widths across all cells. The median half-width was 0.028 for transmurality probability and 0.028 for overheating probability, with maxima of 0.113 and 0.119, respectively. Compared with earlier exploratory low-sample maps, the revised paper-level maps are materially less quantized and support a more defensible probabilistic interpretation.
+
+### 3.6 Literature-derived benchmark
+
+Figure 8 compares protocol-matched simulated lesion depth with literature-derived depth values. The reduced model reproduced the literature-reported ranking of standard RF > HPSD > vHPSD, but the absolute simulated depths were consistently lower than the reported values. Under the nominal reduced-model setup, the simulated depths were 2.755, 1.764, and 1.302 mm for standard RF, HPSD, and vHPSD, respectively, compared with reported values of 6.6, 4.9, and 3.6 mm. This pattern supports the present framework as a trend-level comparative and uncertainty-aware protocol-mapping tool rather than a geometry-matched predictive model.
+
+![**Figure 3.** Deterministic summary plots after the stage16 revision. Panels show lesion depth vs wall thickness, maximum lesion width vs wall thickness, lesion area vs wall thickness, peak temperature vs insertion depth, depth fraction vs cooling, and depth-to-width ratio vs cooling. Across all deterministic summaries, the ordering standard RF > HPSD > vHPSD remained stable for lesion extent, while vHPSD produced the highest peak temperatures.](assets/fig3_deterministic_summary_v2.png){ width=100% }
+
+![**Figure 4.** Numerical verification of the deterministic baseline case. Panel (a) shows relative error to the finest grid for lesion depth and peak temperature; panel (b) shows relative error to the finest time step. The selected grid (281 × 141) and selected time step (0.05 s) provided stable deterministic metrics at substantially lower cost than the finest tested settings.](assets/fig4_verification.png){ width=90% }
+
+![**Figure 5.** Transmurality-probability maps under uncertain contact and cooling conditions. Rows correspond to standard RF, HPSD, and vHPSD; columns correspond to weak, nominal, and strong cooling. Standard RF occupied the broadest transmurality-success region, HPSD occupied an intermediate thin-wall regime, and vHPSD remained non-transmural across the scanned cells.](assets/fig5_transmural_probability_maps.png){ width=95% }
+
+![**Figure 6.** Overheating-probability maps under uncertain contact and cooling conditions. The standard-protocol row is omitted because overheating was absent across the scanned cells. vHPSD showed the broadest overheating-prone region, particularly under thin-wall, weak-cooling, high-contact conditions; HPSD showed a smaller overheating-prone region.](assets/fig6_overheat_probability_maps.png){ width=95% }
+
+![**Figure 7.** Main trade-off summary using median depth fraction and overheating probability. Marker shape denotes protocol and marker color denotes wall thickness. The shaded box indicates a visually favorable region combining relatively high penetration with low overheating risk.](assets/fig7_tradeoff_depthrisk.png){ width=95% }
+
+**Table 3. Literature-derived trend-level benchmark points used for Figure 8.**
+
+| Source / matched point | Protocol | Reported depth (mm) | Simulated depth (mm) |
+|---|---|---:|---:|
+| Nakagawa2021_maxDepth | standard 30W 30s | 6.6 | 2.75 |
+| Nakagawa2021_maxDepth | hpsd 50W 10s | 4.9 | 1.76 |
+| Nakagawa2021_maxDepth | vhpsd 90W 4s | 3.6 | 1.3 |
+
+
+![**Figure 8.** Literature-derived trend benchmark. Panel (a) compares reported lesion depth with simulated lesion depth using an identity line for visual reference. Panel (b) compares protocol-level reported and simulated mean depth values. The reduced model reproduced the protocol-level ranking but underestimated absolute lesion depth under the nominal reduced-model setup.](assets/fig8_literature_benchmark.png){ width=100% }
+
+## 4. Discussion
+
+This study presents a reduced two-dimensional electro-thermal framework for comparing standard RF, HPSD, and vHPSD lesion formation under varying wall thickness, contact surrogate, and cooling conditions. The main contribution is not the deterministic depth ranking itself, which is unsurprising given the protocol definitions, but the uncertainty-aware comparative framework that maps transmurality success and overheating susceptibility across uncertain surface-contact and cooling conditions.
+
+A first key finding is that the deterministic ranking remained stable across the explored settings: standard RF produced the deepest lesions, HPSD occupied an intermediate position, and vHPSD produced the shallowest lesions. Importantly, this ordering was mirrored not only in depth, but also in maximum lesion width and lesion area. The expanded geometry metrics therefore reduce the concern that the model unfairly favors standard RF by reporting depth alone.
+
+A second key finding is that uncertainty-aware maps revealed a sharper trade-off than the deterministic comparisons alone. Under the present assumptions, standard RF occupied the broadest transmural-success region, HPSD reached transmurality in a narrower subset of thin-wall / stronger-contact settings, and vHPSD remained mostly non-transmural while showing the strongest overheating susceptibility in thin-wall, weak-cooling, high-contact conditions. These results should be interpreted as model-based comparative findings under the present reduced 2D assumptions, not as general clinical claims. In particular, the model does not include catheter-specific temperature-control logic, explicit irrigation-jet physics, or chamber-scale flow.
+
+The revised uncertainty workflow directly addresses a central methodological concern in uncertainty-aware computational modeling. The earlier exploratory maps were useful during model development but produced visually quantized probabilities consistent with very low sample counts. In the revised workflow, the paper-level maps use 64 samples per cell and report Wilson-score confidence intervals, making the probability interpretation more defensible. The additional supplementary CI summary figure further clarifies that probability uncertainty remains bounded but non-negligible, especially in cells near the transition between success and failure regimes.
+
+The literature-derived benchmark should also be interpreted cautiously. The present benchmark is not geometry-matched validation and should not be read as evidence of quantitative lesion prediction. Rather, it provides a trend-level comparison showing that the reduced model preserves the experimentally reported protocol ranking while underestimating absolute lesion depth under the nominal setup. This is consistent with the simplified nature of the present 2D model and its omission of catheter-specific temperature-control logic, explicit irrigation, and detailed chamber flow.
+
+The present work has several limitations. First, the model is two-dimensional and reduced-complexity rather than anatomy-matched. Second, the contact surrogate is insertion-depth-based and does not include explicit mechanics. Third, cooling is represented by an effective surface heat-transfer coefficient rather than explicit blood or irrigation-flow simulation. Fourth, the external benchmark remains trend-level and limited in size. Finally, the current overheating proxy is based on temperatures reaching or exceeding 100 °C and should not be interpreted as a mechanistic steam-pop or char model.
+
+Despite these limitations, the framework is potentially useful as a low-cost comparative tool for protocol mapping. Future work should include catheter-specific temperature-control logic, explicit irrigation or chamber-flow surrogates, stronger geometry-matched validation, and broader protocol-matched literature benchmarking. In that role, the current reduced model can serve as an efficient screening or hypothesis-generation tool that complements, rather than replaces, higher-fidelity simulations and experiments.
+
+## 5. Conclusion
+
+A reduced two-dimensional electro-thermal model was developed to compare standard RF, HPSD, and vHPSD protocols under uncertain contact and cooling conditions. Across deterministic and probabilistic analyses, the model consistently ranked lesion penetration as standard RF > HPSD > vHPSD. Standard RF exhibited the broadest transmural-success region and the lowest overheating susceptibility, HPSD occupied an intermediate regime, and vHPSD remained shallowest while showing the strongest thermal-risk sensitivity under thin-wall, aggressive-contact conditions.
+
+The revised uncertainty workflow, which included 64 samples per nominal cell and Wilson-score confidence intervals, strengthened the interpretability of the transmurality and overheating maps. The literature-derived benchmark reproduced the protocol-level ranking reported experimentally but underestimated absolute lesion depth, indicating that the present framework is most appropriate for comparative and uncertainty-aware protocol mapping rather than patient-specific quantitative lesion prediction.
+
+## Data availability
+
+Code, frozen figures, benchmark assets, and manuscript materials are organized within the accompanying project repository and submission package.
+
+## Funding
+
+To be added by the authors.
+
+## Acknowledgements
+
+To be added by the authors.
+
+## Conflict of interest
+
+The authors declare that the conflict-of-interest statement will be finalized prior to submission.
+
+## References
+
+1. González-Suárez A, Pérez JJ, Irastorza RM, D'Avila A, Berjano E. Computer modeling of radiofrequency cardiac ablation: 30 years of bioengineering research. *Comput Methods Programs Biomed.* 2022;214:106546. doi:10.1016/j.cmpb.2021.106546.
+2. Pérez JJ, et al. Computer modeling of radiofrequency cardiac ablation including heartbeat-induced electrode displacement. *Comput Biol Med.* 2022;144:105346. doi:10.1016/j.compbiomed.2022.105346.
+3. Nakagawa H, Ikeda A, Sharma T, Govari A, Ashton J, Maffre J, et al. Comparison of in vivo tissue temperature profile and lesion geometry for radiofrequency ablation with high power-short duration and moderate power-moderate duration: effects of thermal latency and contact force on lesion formation. *Circ Arrhythm Electrophysiol.* 2021;14(7):e009899. doi:10.1161/CIRCEP.121.009899.
+4. Yamaguchi J, Takigawa M, Goya M, Martin CA, Negishi M, Yamamoto T, et al. Impact of contact force on the lesion characteristics of very high-power short-duration ablation using a QDOT-MICRO catheter. *J Arrhythm.* 2024;40:247-255. doi:10.1002/joa3.12992.
+5. Pennes HH. Analysis of tissue and arterial blood temperatures in the resting human forearm. *J Appl Physiol.* 1948;1:93-122.
+6. Henriques FC Jr. Studies of thermal injury V: the predictability and the significance of thermally induced rate processes leading to irreversible epidermal injury. *Arch Pathol.* 1947;43:489-502.
+7. Wilson EB. Probable inference, the law of succession, and statistical inference. *J Am Stat Assoc.* 1927;22(158):209-212.
+8. Arrhenius S. On the reaction velocity of the inversion of cane sugar by acids. *Z Phys Chem.* 1889;4:226-248.
+
+## Appendix A. Supplementary figures
+
+![**Figure S1.** Median depth-fraction maps under uncertain contact and cooling conditions. Rows correspond to standard RF, HPSD, and vHPSD; columns correspond to weak, nominal, and strong cooling.](assets/figS1_depth_fraction_p50_maps.png){ width=95% }
+
+![**Figure S2.** Alternative trade-off summary using transmurality probability and overheating probability. Marker shape denotes protocol and marker color denotes wall thickness. This view is provided as a supplementary counterpart to the main depth-risk trade-off summary in Figure 7.](assets/figS2_tradeoff_ptrans_pover.png){ width=95% }
+
+![**Figure S3.** Distribution of 95% Wilson-score confidence-interval half-widths for (a) transmurality probability and (b) overheating probability across all nominal cells in the paper-level uncertainty maps. The distributions show that most cells have relatively narrow intervals, while a small subset near transition regimes retains wider uncertainty bounds.](assets/figS3_probability_ci_halfwidths.png){ width=90% }
