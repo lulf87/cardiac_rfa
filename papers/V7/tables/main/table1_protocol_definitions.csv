@@ -1,0 +1,4 @@
+Protocol,Power_W,Duration_s,Nominal_energy_J,Interpretation
+Standard RF,30,30,900,Conventional long-duration comparator
+HPSD,50,10,500,Intermediate high-power short-duration comparator
+vHPSD,90,4,360,Very-high-power short-duration comparator
