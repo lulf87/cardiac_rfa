@@ -1,0 +1,4 @@
+Protocol,Power_W,Duration_s,Energy_J
+Standard,30,30,900
+HPSD,50,10,500
+vHPSD,90,4,360

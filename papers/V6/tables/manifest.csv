@@ -1,0 +1,4 @@
+section,table_id,path
+main,table1,tables/main/table1_protocol_definitions.csv
+main,table2,tables/main/table2_solver_uq_settings.csv
+main,table3,tables/main/table3_literature_benchmark_points.csv

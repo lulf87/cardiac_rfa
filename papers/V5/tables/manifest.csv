@@ -1,0 +1,6 @@
+relative_path,bytes
+main/table1_protocol_definitions.csv,86
+main/table2_solver_uq_settings.csv,575
+main/table3_literature_benchmark_points.csv,209
+source_csv/table2_source.csv,575
+source_csv/uq_summary.csv,49561

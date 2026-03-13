@@ -1,0 +1,4 @@
+Source / matched point,Protocol,Reported depth (mm),Simulated depth (mm)
+Nakagawa2021_maxDepth,standard 30W 30s,6.6,2.75
+Nakagawa2021_maxDepth,hpsd 50W 10s,4.9,1.76
+Nakagawa2021_maxDepth,vhpsd 90W 4s,3.6,1.30
