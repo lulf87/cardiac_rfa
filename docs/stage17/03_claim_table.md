@@ -2,6 +2,8 @@
 
 | Claim ID | Draft claim | Evidence file/figure | Current status | Limitation |
 |---|---|---|---|---|
-| C1 | stage17 defines two 90 W / 4 s comparators | pending | open | not device-specific |
-| C2 | thermal latency materially affects short high-power depth | pending | open | reduced model only |
-| C3 | depth-based outputs are more defensible than width/overheat | pending | open | needs benchmarking |
+| C1 | Stage17 distinguishes two 90 W / 4 s comparators: fixed-power and generic temperature-limited. | simulation/stage17_controlled_rebuild/configs/protocols_stage17_fourway.yaml; outputs/protocol_scan_stage17_fourway/protocol_summary.csv | supported | generic controller only; not device-specific |
+| C2 | Adding an 8 s post-pulse latency window materially increases short high-power lesion depth relative to no-latency outputs. | outputs/smoke_case3/summary.yaml; outputs/smoke_case5/summary.yaml | supported | reduced 2D electro-thermal model |
+| C3 | Under stage17 assumptions, controlled 90 W / 4 s often lowers delivered energy and peak temperature relative to fixed 90 W / 4 s, with modest depth reduction rather than collapse. | outputs/protocol_scan_stage17_fourway/protocol_summary.csv; outputs/phase_prep_stage17_fourway/phase_prep_summary.csv | supported | effect is threshold-dependent and not active in every grid cell |
+| C4 | In some cooler / less aggressive conditions, the generic controller is effectively inactive and controlled outputs coincide with fixed outputs. | outputs/phase_prep_stage17_fourway/phase_prep_summary.csv | supported | controller parameterization is provisional |
+| C5 | The most defensible stage17 outputs are lesion depth, depth fraction, delivered energy, and peak temperature trends; width and overheating remain secondary proxies. | outputs/protocol_scan_stage17_fourway/protocol_summary.csv; outputs/phase_prep_stage17_fourway/phase_prep_summary.csv | supported | no CFD / irrigation jet / chamber flow |
