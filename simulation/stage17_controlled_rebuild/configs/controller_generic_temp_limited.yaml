@@ -1,0 +1,10 @@
+controller_name: generic_temp_limited
+enabled: false
+sensor_location: surface_adjacent
+target_temperature_C: 55.0
+ceiling_temperature_C: 65.0
+max_power_W: 90.0
+min_power_W: 5.0
+ramp_down_gain_W_per_C: 15.0
+sample_period_s: 0.05
+notes: "Stage17 placeholder controller. Generic only. Not device-specific."

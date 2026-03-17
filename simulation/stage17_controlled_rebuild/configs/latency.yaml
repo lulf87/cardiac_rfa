@@ -1,0 +1,4 @@
+enabled: false
+post_pulse_duration_s: 8.0
+record_dt_s: 0.05
+notes: "Stage17 placeholder for post-ablation thermal latency window."
