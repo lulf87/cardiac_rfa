@@ -11,6 +11,9 @@ from scipy.sparse.linalg import factorized, spsolve
 import yaml
 import matplotlib.pyplot as plt
 
+from controller import GenericTempLimitedController
+from latency import LatencyConfig, extra_latency_steps
+
 R_GAS = 8.314462618  # J/(mol K)
 
 
@@ -376,11 +379,74 @@ def compute_lesion_area_mm2(lesion_mask: np.ndarray, dx: float, dy: float) -> fl
     return float(lesion_mask.sum() * dx * dy * 1e6)
 
 
-def run_case(cfg: CaseConfig) -> Dict[str, Any]:
+def _surface_adjacent_temperature_C(T: np.ndarray) -> float:
+    row = 1 if T.shape[0] >= 2 else 0
+    return float(T[row, :].max())
+
+
+def _controller_interval_steps(sample_period_s: float, dt_s: float) -> int:
+    if dt_s <= 0.0:
+        raise ValueError("dt_s must be positive")
+    return max(1, int(round(sample_period_s / dt_s)))
+
+
+def _build_scalar_result(
+    cfg: CaseConfig,
+    peak_T_report: np.ndarray,
+    lesion_depth_mm: float,
+    lesion_width_mm: float,
+    lesion_area_mm2: float,
+    transmural: bool,
+    overheat_area_mm2: float,
+    requested_power_W: float,
+    delivered_energy_J: float,
+    mean_applied_power_W: float,
+    controller_enabled: bool,
+    latency_enabled: bool,
+    latency_duration_s: float,
+) -> Dict[str, Any]:
+    return {
+        "power_W": float(cfg.power_W),
+        "duration_s": float(cfg.duration_s),
+        "wall_thickness_mm": float(cfg.wall_thickness_mm),
+        "bottom_buffer_mm": float(cfg.bottom_buffer_mm),
+        "cooling_h_W_per_m2K": float(cfg.cooling_h_W_per_m2K),
+        "insertion_depth_mm": float(cfg.insertion_depth_mm),
+        "nx": int(cfg.nx),
+        "ny": int(cfg.ny),
+        "dt_s": float(cfg.dt_s),
+        "source_smoothing_mm": float(cfg.source_smoothing_mm),
+        "lesion_depth_mm": float(lesion_depth_mm),
+        "lesion_width_mm": float(lesion_width_mm),
+        "lesion_area_mm2": float(lesion_area_mm2),
+        "depth_to_width_ratio": float(lesion_depth_mm / lesion_width_mm) if lesion_width_mm > 1e-12 else float("nan"),
+        "depth_fraction": float(lesion_depth_mm / cfg.wall_thickness_mm),
+        "transmural": bool(transmural),
+        "overheat_area_mm2": float(overheat_area_mm2),
+        "peak_temperature_C": float(np.max(peak_T_report)),
+        "requested_power_W": float(requested_power_W),
+        "delivered_energy_J": float(delivered_energy_J),
+        "mean_applied_power_W": float(mean_applied_power_W),
+        "controller_enabled": bool(controller_enabled),
+        "latency_enabled": bool(latency_enabled),
+        "latency_duration_s": float(latency_duration_s),
+    }
+
+
+def _run_case_core(
+    cfg: CaseConfig,
+    controller: GenericTempLimitedController | None = None,
+    latency: LatencyConfig | None = None,
+) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    controller_cfg = controller if controller is not None else GenericTempLimitedController()
+    latency_cfg = latency if latency is not None else LatencyConfig()
+    controller_cfg.validate()
+    latency_cfg.validate()
+
     x, y, dx, dy = make_grid(cfg)
     _, _, phi = solve_unit_potential(cfg)
     q_unit = compute_unit_heat(phi, cfg, dx, dy)
-    q = regularize_and_scale_heat_source(q_unit, cfg, x, y, dx, dy)
+    q_nominal = regularize_and_scale_heat_source(q_unit, cfg, x, y, dx, dy)
 
     _, _, solve_heat, rhs_bc = assemble_heat_stepper(cfg)
     T = np.full((cfg.ny, cfg.nx), cfg.t_init_C, dtype=float)
@@ -390,15 +456,48 @@ def run_case(cfg: CaseConfig) -> Dict[str, Any]:
     rho_c_dt = cfg.rho_kg_per_m3 * cfg.c_J_per_kgK / cfg.dt_s
     wall_mask_1d = physical_wall_mask(y, cfg)
     wall_mask_2d = np.repeat(wall_mask_1d[:, None], cfg.nx, axis=1)
+    requested_power_W = float(cfg.power_W)
+    applied_power_W = requested_power_W
+    delivered_energy_J = 0.0
+    controller_enabled = bool(controller_cfg.enabled)
+    latency_enabled = bool(latency_cfg.enabled)
+    latency_duration_s = float(latency_cfg.post_pulse_duration_s) if latency_enabled else 0.0
+    controller_steps = _controller_interval_steps(controller_cfg.sample_period_s, cfg.dt_s)
+    zero_heat = np.zeros_like(q_nominal)
 
-    for _ in range(steps):
-        rhs = rho_c_dt * T.ravel() + q.ravel() + rhs_bc
+    for step_idx in range(steps):
+        if controller_enabled and step_idx % controller_steps == 0:
+            measured_temp_C = _surface_adjacent_temperature_C(T)
+            applied_power_W = controller_cfg.compute_power(measured_temp_C, requested_power_W)
+
+        if controller_enabled:
+            if abs(requested_power_W) > 1e-15:
+                q_step = q_nominal * (applied_power_W / requested_power_W)
+            else:
+                q_step = zero_heat
+        else:
+            applied_power_W = requested_power_W
+            q_step = q_nominal
+
+        rhs = rho_c_dt * T.ravel() + q_step.ravel() + rhs_bc
         T_new = solve_heat(rhs).reshape(cfg.ny, cfg.nx)
         temp_K = T_new + 273.15
         d_omega = cfg.arrhenius_A_1_per_s * np.exp(-cfg.arrhenius_Ea_J_per_mol / (R_GAS * temp_K)) * cfg.dt_s
         omega += d_omega * wall_mask_2d
         peak_T = np.maximum(peak_T, T_new)
         T = T_new
+        delivered_energy_J += applied_power_W * cfg.dt_s
+
+    if latency_enabled:
+        latency_steps = extra_latency_steps(latency_cfg.post_pulse_duration_s, cfg.dt_s)
+        for _ in range(latency_steps):
+            rhs = rho_c_dt * T.ravel() + rhs_bc
+            T_new = solve_heat(rhs).reshape(cfg.ny, cfg.nx)
+            temp_K = T_new + 273.15
+            d_omega = cfg.arrhenius_A_1_per_s * np.exp(-cfg.arrhenius_Ea_J_per_mol / (R_GAS * temp_K)) * cfg.dt_s
+            omega += d_omega * wall_mask_2d
+            peak_T = np.maximum(peak_T, T_new)
+            T = T_new
 
     omega_report = np.where(wall_mask_2d, omega, 0.0)
     peak_T_report = np.where(wall_mask_2d, peak_T, cfg.t_init_C)
@@ -417,57 +516,97 @@ def run_case(cfg: CaseConfig) -> Dict[str, Any]:
     lesion_area_mm2 = compute_lesion_area_mm2(lesion_mask, dx, dy)
     transmural = lesion_depth_mm >= cfg.wall_thickness_mm - 1e-6
     overheat_area_mm2 = float((peak_T_report >= 100.0).sum() * dx * dy * 1e6)
+    mean_applied_power_W = delivered_energy_J / (steps * cfg.dt_s) if steps > 0 else 0.0
 
-    return {
+    result = _build_scalar_result(
+        cfg=cfg,
+        peak_T_report=peak_T_report,
+        lesion_depth_mm=lesion_depth_mm,
+        lesion_width_mm=lesion_width_mm,
+        lesion_area_mm2=lesion_area_mm2,
+        transmural=transmural,
+        overheat_area_mm2=overheat_area_mm2,
+        requested_power_W=requested_power_W,
+        delivered_energy_J=delivered_energy_J,
+        mean_applied_power_W=mean_applied_power_W,
+        controller_enabled=controller_enabled,
+        latency_enabled=latency_enabled,
+        latency_duration_s=latency_duration_s,
+    )
+
+    fields = {
         "x_m": x,
         "y_m": y,
         "phi": phi,
         "q_unit": q_unit,
-        "q": q,
+        "q": q_nominal,
         "peak_T_C": peak_T_report,
         "omega": omega_report,
         "lesion_mask": lesion_mask,
-        "lesion_depth_mm": float(lesion_depth_mm),
-        "lesion_width_mm": float(lesion_width_mm),
-        "lesion_area_mm2": float(lesion_area_mm2),
-        "depth_to_width_ratio": float(lesion_depth_mm / lesion_width_mm) if lesion_width_mm > 1e-12 else float("nan"),
-        "transmural": bool(transmural),
-        "overheat_area_mm2": overheat_area_mm2,
-        "cfg": cfg,
     }
+    return result, fields
+
+
+def run_case(
+    cfg: CaseConfig,
+    controller: GenericTempLimitedController | None = None,
+    latency: LatencyConfig | None = None,
+) -> Dict[str, Any]:
+    result, _ = _run_case_core(cfg, controller=controller, latency=latency)
+    return result
+
+
+def run_case_with_fields(
+    cfg: CaseConfig,
+    controller: GenericTempLimitedController | None = None,
+    latency: LatencyConfig | None = None,
+) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    return _run_case_core(cfg, controller=controller, latency=latency)
 
 
 def summarize_result(result: Dict[str, Any]) -> Dict[str, Any]:
+    if "cfg" not in result:
+        return dict(result)
+
     cfg: CaseConfig = result["cfg"]
-    return {
-        "power_W": float(cfg.power_W),
-        "duration_s": float(cfg.duration_s),
-        "wall_thickness_mm": float(cfg.wall_thickness_mm),
-        "bottom_buffer_mm": float(cfg.bottom_buffer_mm),
-        "cooling_h_W_per_m2K": float(cfg.cooling_h_W_per_m2K),
-        "insertion_depth_mm": float(cfg.insertion_depth_mm),
-        "nx": int(cfg.nx),
-        "ny": int(cfg.ny),
-        "dt_s": float(cfg.dt_s),
-        "source_smoothing_mm": float(cfg.source_smoothing_mm),
-        "lesion_depth_mm": float(result["lesion_depth_mm"]),
-        "lesion_width_mm": float(result["lesion_width_mm"]),
-        "lesion_area_mm2": float(result["lesion_area_mm2"]),
-        "depth_to_width_ratio": float(result["depth_to_width_ratio"]),
-        "depth_fraction": float(result["lesion_depth_mm"] / cfg.wall_thickness_mm),
-        "transmural": bool(result["transmural"]),
-        "overheat_area_mm2": float(result["overheat_area_mm2"]),
-        "peak_temperature_C": float(np.max(result["peak_T_C"])),
-    }
+    return _build_scalar_result(
+        cfg=cfg,
+        peak_T_report=result["peak_T_C"],
+        lesion_depth_mm=float(result["lesion_depth_mm"]),
+        lesion_width_mm=float(result["lesion_width_mm"]),
+        lesion_area_mm2=float(result["lesion_area_mm2"]),
+        transmural=bool(result["transmural"]),
+        overheat_area_mm2=float(result["overheat_area_mm2"]),
+        requested_power_W=float(result.get("requested_power_W", cfg.power_W)),
+        delivered_energy_J=float(result.get("delivered_energy_J", cfg.power_W * cfg.duration_s)),
+        mean_applied_power_W=float(result.get("mean_applied_power_W", cfg.power_W)),
+        controller_enabled=bool(result.get("controller_enabled", False)),
+        latency_enabled=bool(result.get("latency_enabled", False)),
+        latency_duration_s=float(result.get("latency_duration_s", 0.0)),
+    )
 
 
-def plot_case(result: Dict[str, Any], outpath: str | Path) -> None:
-    x = result["x_m"] * 1e3
-    y = result["y_m"] * 1e3
-    cfg: CaseConfig = result["cfg"]
-    phi = result["phi"]
-    peak_T = result["peak_T_C"]
-    omega = result["omega"]
+def plot_case(
+    result: Dict[str, Any],
+    outpath: str | Path,
+    fields: Dict[str, Any] | None = None,
+    cfg: CaseConfig | None = None,
+) -> None:
+    if fields is None:
+        required = {"x_m", "y_m", "phi", "peak_T_C", "omega"}
+        if not required.issubset(result):
+            raise ValueError("plot_case requires field outputs when result is summary-only")
+        fields = result
+        cfg = result.get("cfg", cfg)
+
+    if cfg is None:
+        raise ValueError("plot_case requires cfg when using detached field outputs")
+
+    x = fields["x_m"] * 1e3
+    y = fields["y_m"] * 1e3
+    phi = fields["phi"]
+    peak_T = fields["peak_T_C"]
+    omega = fields["omega"]
     depth = result["lesion_depth_mm"]
 
     fig, axes = plt.subplots(1, 3, figsize=(15.0, 4.4), constrained_layout=True)
