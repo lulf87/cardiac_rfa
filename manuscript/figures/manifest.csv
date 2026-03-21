@@ -1,11 +1,11 @@
-figure_id,category,preferred_file,notes
-fig1_model_workflow,main,pdf,schematic/workflow
-fig2_representative_fields,main,pdf,field maps + contours
-fig3_deterministic_summary,main,pdf,deterministic summary
-fig4_verification,main,pdf,grid and time-step refinement
-fig5_transmural_probability_maps,main,pdf,main probability matrix
-fig6_overheat_probability_maps,main,pdf,main overheating matrix
-fig7_tradeoff_depthrisk,main,pdf,summary trade-off
-fig8_literature_benchmark,main,pdf,to be regenerated after benchmark CSV is finalized
-figS1_depth_fraction_p50_maps,supplement,pdf,median depth fraction maps
-figS2_tradeoff_ptrans_pover,supplement,pdf,backup trade-off view
+figure_id,category,preferred_file,authority_status,current_authority_source,legacy_packaged_file,notes
+fig1_model_workflow,main,pdf,CURRENT,analysis/stage17_methodology_figs/example_outputs/fig1_stage17_geometry_workflow.{pdf,png,tiff},papers/V13/CMBBE_figure_upload/Figure1.png,"Stage17 schematic/workflow is the current authority. Keep legacy packaged Figure1.png as reference only until an explicit packaging refresh is performed."
+fig2_representative_fields,main,pdf,UNRESOLVED,NOT FOUND,papers/V13/CMBBE_figure_upload/Figure2.png,"No stage17-native Figure 2 generator was located. Do not guess a replacement."
+fig3_deterministic_summary,main,pdf,CURRENT,analysis/stage17_methodology_figs/example_outputs/fig_stage17_deterministic_fourway.{pdf,png,tiff},papers/V13/CMBBE_figure_upload/Figure3.png,"Stage17 four-way deterministic figure is the current authority. Keep legacy packaged Figure3.png as reference only until an explicit packaging refresh is performed."
+fig4_verification,main,pdf,UNRESOLVED,NOT FOUND,papers/V13/CMBBE_figure_upload/Figure4.png,"Stage17 convergence CSVs exist, but a dedicated stage17-native Figure 4 plotting script was not located. Do not guess a replacement."
+fig5_transmural_probability_maps,main,pdf,CURRENT,analysis/stage17_methodology_figs/example_outputs/fig5_depth_fraction_fixed_vs_controlled.{pdf,png,tiff},papers/V13/CMBBE_figure_upload/Figure5.png,"Stage17 fixed-vs-controlled depth-fraction maps are the current authority. Keep legacy packaged Figure5.png as reference only until an explicit packaging refresh is performed."
+fig6_overheat_probability_maps,main,pdf,CURRENT,analysis/stage17_methodology_figs/example_outputs/fig6_peak_temperature_fixed_vs_controlled.{pdf,png,tiff},papers/V13/CMBBE_figure_upload/Figure6.png,"Stage17 fixed-vs-controlled peak-temperature maps are the current authority. Keep legacy packaged Figure6.png as reference only until an explicit packaging refresh is performed."
+fig7_tradeoff_depthrisk,main,pdf,CURRENT,analysis/stage17_methodology_figs/example_outputs/fig7_controlled_minus_fixed_maps.{pdf,png,tiff},papers/V13/CMBBE_figure_upload/Figure7.png,"Stage17 controlled-minus-fixed difference maps are the current authority. Keep legacy packaged Figure7.png as reference only until an explicit packaging refresh is performed."
+fig8_literature_benchmark,main,pdf,LEGACY_REFERENCE,NOT APPLICABLE; see manuscript/scripts/make_fig8_final.py,papers/V13/CMBBE_figure_upload/Figure8.png,"Figure 8 is outside the stage17 figure-authority lock. Retain the existing benchmark path until separately audited and refreshed."
+figS1_depth_fraction_p50_maps,supplement,pdf,LEGACY_REFERENCE,NOT APPLICABLE,manuscript/submission_package/supp_png_preview/figS1_depth_fraction_p50_maps.png,"Supplementary legacy reference figure retained as-is. No stage17 replacement is designated in this lock step."
+figS2_tradeoff_ptrans_pover,supplement,pdf,LEGACY_REFERENCE,NOT APPLICABLE,manuscript/submission_package/supp_png_preview/figS2_tradeoff_ptrans_pover.png,"Supplementary legacy reference figure retained as-is. No stage17 replacement is designated in this lock step."

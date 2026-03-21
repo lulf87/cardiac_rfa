@@ -68,11 +68,11 @@ def chip(ax, text, x=0.5, y=1.04, fs=11, ha="center"):
 
 def protocol_tag(fig, ax, text, fc):
     bb = ax.get_position()
-    x = bb.x0 - 0.032
+    x = bb.x0 - 0.038
     y = (bb.y0 + bb.y1) / 2
     fig.text(
         x, y, text, rotation=90, ha="center", va="center",
-        fontsize=11, color=PALETTE["text"], weight="semibold",
+        fontsize=10.5, color=PALETTE["text"], weight="semibold",
         bbox=dict(boxstyle="round,pad=0.28,rounding_size=0.14", fc=fc, ec="none")
     )
 
@@ -296,23 +296,26 @@ def draw_matrix(fig, axes, df, value_col, cmap, cbar_label, outbase, protocols, 
                         show = val > 0
                     if show:
                         color = "white" if val < 0.45 else "black"
-                        ax.text(ins, wall, f"{val:.2f}", ha="center", va="center", fontsize=11, color=color)
+                        ax.text(ins, wall, f"{val:.2f}", ha="center", va="center", fontsize=10, color=color)
 
     for i, protocol in enumerate(rows):
         protocol_tag(fig, axes[i, 0], PROTOCOL_LABEL[protocol], PALETTE["protocol_light"][protocol])
 
-    fig.text(0.04, 0.50, "Wall thickness [mm]", rotation=90, va="center", ha="center",
-             fontsize=13, color=PALETTE["text"])
-    cbar = fig.colorbar(first_img, ax=axes.ravel().tolist(), fraction=0.03, pad=0.02)
+    fig.text(0.045, 0.50, "Wall thickness [mm]", rotation=90, va="center", ha="center",
+             fontsize=12.5, color=PALETTE["text"])
+    fig.subplots_adjust(left=0.13, right=0.88, top=0.91, bottom=0.11, wspace=0.08, hspace=0.10)
+    cbar_height = 0.68 if len(rows) == 3 else 0.72
+    cbar_y = 0.16 if len(rows) == 3 else 0.14
+    cbar_ax = fig.add_axes([0.90, cbar_y, 0.022, cbar_height])
+    cbar = fig.colorbar(first_img, cax=cbar_ax)
     cbar.set_label(cbar_label)
     if omit_note:
         fig.text(0.12, 0.02, omit_note, fontsize=10.5, color=PALETTE["text"])
-    fig.subplots_adjust(left=0.12, right=0.92, top=0.92, bottom=0.10, wspace=0.08, hspace=0.10)
     save(fig, outbase)
 
 
 def fig5_transmural(uq_df: pd.DataFrame, outdir: str):
-    fig, axes = plt.subplots(3, 3, figsize=(10.5, 8.2), facecolor=PALETTE["background"], sharex=True, sharey=True)
+    fig, axes = plt.subplots(3, 3, figsize=(11.4, 8.6), facecolor=PALETTE["background"], sharex=True, sharey=True)
     draw_matrix(fig, axes, uq_df, "transmural_probability", PALETTE["cmap_prob"],
                 "Transmural probability",
                 os.path.join(outdir, "fig5_transmural_probability_maps"),
@@ -321,7 +324,7 @@ def fig5_transmural(uq_df: pd.DataFrame, outdir: str):
 
 def fig6_overheat(uq_df: pd.DataFrame, outdir: str):
     sub = uq_df[uq_df["name"].isin(["hpsd_50W_10s", "vhpsd_90W_4s"])].copy()
-    fig, axes = plt.subplots(2, 3, figsize=(10.5, 6.4), facecolor=PALETTE["background"], sharex=True, sharey=True)
+    fig, axes = plt.subplots(2, 3, figsize=(11.4, 6.8), facecolor=PALETTE["background"], sharex=True, sharey=True)
     draw_matrix(fig, axes, sub, "overheat_probability", PALETTE["cmap_overheat"],
                 "Overheat probability",
                 os.path.join(outdir, "fig6_overheat_probability_maps"),
@@ -329,14 +332,23 @@ def fig6_overheat(uq_df: pd.DataFrame, outdir: str):
                 annotate_mode="transition")
 
 
+def _tradeoff_figure(figsize):
+    fig = plt.figure(figsize=figsize, facecolor=PALETTE["background"])
+    gs = fig.add_gridspec(1, 4, width_ratios=[1.0, 1.0, 1.0, 0.86], wspace=0.22)
+    axes = [fig.add_subplot(gs[0, i]) for i in range(3)]
+    legend_ax = fig.add_subplot(gs[0, 3])
+    legend_ax.axis("off")
+    return fig, axes, legend_ax
+
+
 def fig7_tradeoff_depthrisk(uq_df: pd.DataFrame, outdir: str):
     coolings = sorted(uq_df["cooling_h_nominal_W_per_m2K"].unique())
-    fig, axes = plt.subplots(1, 3, figsize=(12.2, 4.4), facecolor=PALETTE["background"], sharex=True, sharey=True)
+    fig, axes, legend_ax = _tradeoff_figure((13.2, 4.8))
     for j, h in enumerate(coolings):
         ax = axes[j]
         chip(ax, COOLING_LABEL[float(h)], y=1.05)
         ax.axvspan(0.80, 1.02, ymin=0.0, ymax=0.23, color="#BDE5D2", alpha=0.40, zorder=0)
-        ax.text(0.93, 0.14, "favorable\nzone", ha="center", va="center", fontsize=11, color="#4F6E5E",
+        ax.text(0.80, 0.12, "favorable zone", ha="left", va="center", fontsize=9.5, color="#4F6E5E",
                 transform=ax.transAxes, bbox=dict(boxstyle="round,pad=0.25,rounding_size=0.12",
                                                   fc="#BDE5D2", ec="#7AB894", lw=1.5, alpha=0.65))
         sub = uq_df[uq_df["cooling_h_nominal_W_per_m2K"] == h]
@@ -357,6 +369,7 @@ def fig7_tradeoff_depthrisk(uq_df: pd.DataFrame, outdir: str):
         ax.set_xlabel("Median depth fraction")
         if j == 0:
             ax.set_ylabel("Overheat probability")
+        ax.grid(alpha=0.28)
     protocol_handles = [
         Line2D([0], [0], marker=PROTOCOL_MARKER[p], markersize=12, lw=0,
                markerfacecolor="#D7DCE3", markeredgecolor="black", markeredgewidth=1.2,
@@ -367,16 +380,14 @@ def fig7_tradeoff_depthrisk(uq_df: pd.DataFrame, outdir: str):
                markerfacecolor=PALETTE["wall"][f"{w:.1f}"], markeredgecolor="black",
                label=f"{int(w)} mm") for w in WALL_ORDER
     ]
-    leg1 = fig.legend(handles=protocol_handles, title="Protocol", loc="center left",
-                      bbox_to_anchor=(0.98, 0.70), frameon=True)
-    leg2 = fig.legend(handles=wall_handles, title="Wall thickness", loc="center left",
-                      bbox_to_anchor=(0.98, 0.28), frameon=True)
-    fig.add_artist(leg1)
-    fig.subplots_adjust(left=0.08, right=0.86, top=0.90, bottom=0.16, wspace=0.18)
+    leg1 = legend_ax.legend(handles=protocol_handles, title="Protocol", loc="upper left", frameon=True)
+    legend_ax.add_artist(leg1)
+    legend_ax.legend(handles=wall_handles, title="Wall thickness", loc="lower left", frameon=True)
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.90, bottom=0.16)
     save(fig, os.path.join(outdir, "fig7_tradeoff_depthrisk"))
 
     # supplementary ptrans-vs-pover scatter
-    fig, axes = plt.subplots(1, 3, figsize=(12.2, 4.4), facecolor=PALETTE["background"], sharex=True, sharey=True)
+    fig, axes, legend_ax = _tradeoff_figure((13.2, 4.8))
     for j, h in enumerate(coolings):
         ax = axes[j]
         chip(ax, COOLING_LABEL[float(h)], y=1.05)
@@ -397,16 +408,16 @@ def fig7_tradeoff_depthrisk(uq_df: pd.DataFrame, outdir: str):
         ax.set_xlabel("Transmural probability")
         if j == 0:
             ax.set_ylabel("Overheat probability")
-    fig.legend(handles=protocol_handles, title="Protocol", loc="center left",
-               bbox_to_anchor=(0.98, 0.70), frameon=True)
-    fig.legend(handles=wall_handles, title="Wall thickness", loc="center left",
-               bbox_to_anchor=(0.98, 0.28), frameon=True)
-    fig.subplots_adjust(left=0.08, right=0.86, top=0.90, bottom=0.16, wspace=0.18)
+        ax.grid(alpha=0.28)
+    leg1 = legend_ax.legend(handles=protocol_handles, title="Protocol", loc="upper left", frameon=True)
+    legend_ax.add_artist(leg1)
+    legend_ax.legend(handles=wall_handles, title="Wall thickness", loc="lower left", frameon=True)
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.90, bottom=0.16)
     save(fig, os.path.join(outdir, "figS2_tradeoff_ptrans_pover"))
 
 
 def figS1_depth(uq_df: pd.DataFrame, outdir: str):
-    fig, axes = plt.subplots(3, 3, figsize=(10.5, 8.2), facecolor=PALETTE["background"], sharex=True, sharey=True)
+    fig, axes = plt.subplots(3, 3, figsize=(11.4, 8.6), facecolor=PALETTE["background"], sharex=True, sharey=True)
     draw_matrix(fig, axes, uq_df, "depth_fraction_p50", PALETTE["cmap_depth"],
                 "Median depth fraction",
                 os.path.join(outdir, "figS1_depth_fraction_p50_maps"),

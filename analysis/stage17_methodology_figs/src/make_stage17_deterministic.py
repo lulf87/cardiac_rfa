@@ -48,7 +48,14 @@ def save_all(fig: plt.Figure, outbase: Path) -> None:
 
 
 def make_figure(phase_df: pd.DataFrame, outbase: Path) -> None:
-    fig, axes = plt.subplots(2, 3, figsize=(13.0, 7.2), constrained_layout=True)
+    fig = plt.figure(figsize=(13.4, 8.0))
+    gs = fig.add_gridspec(3, 3, height_ratios=[1.0, 1.0, 0.18], hspace=0.34, wspace=0.18)
+    axes = [
+        [fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[0, 2])],
+        [fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1]), fig.add_subplot(gs[1, 2])],
+    ]
+    legend_ax = fig.add_subplot(gs[2, :])
+    legend_ax.axis("off")
 
     wall_slice = phase_df[
         (phase_df["cooling_h_W_per_m2K"] == 1500.0)
@@ -65,7 +72,7 @@ def make_figure(phase_df: pd.DataFrame, outbase: Path) -> None:
 
     panels = [
         (
-            axes[0, 0],
+            axes[0][0],
             wall_slice,
             "wall_thickness_mm",
             "lesion_depth_mm",
@@ -74,7 +81,7 @@ def make_figure(phase_df: pd.DataFrame, outbase: Path) -> None:
             "(a) Depth vs wall thickness",
         ),
         (
-            axes[0, 1],
+            axes[0][1],
             wall_slice,
             "wall_thickness_mm",
             "lesion_width_mm",
@@ -83,7 +90,7 @@ def make_figure(phase_df: pd.DataFrame, outbase: Path) -> None:
             "(b) Width vs wall thickness",
         ),
         (
-            axes[0, 2],
+            axes[0][2],
             wall_slice,
             "wall_thickness_mm",
             "lesion_area_mm2",
@@ -92,7 +99,7 @@ def make_figure(phase_df: pd.DataFrame, outbase: Path) -> None:
             "(c) Area vs wall thickness",
         ),
         (
-            axes[1, 0],
+            axes[1][0],
             ins_slice,
             "insertion_depth_mm",
             "peak_temperature_C",
@@ -101,7 +108,7 @@ def make_figure(phase_df: pd.DataFrame, outbase: Path) -> None:
             "(d) Peak temperature vs insertion",
         ),
         (
-            axes[1, 1],
+            axes[1][1],
             cool_slice,
             "cooling_h_W_per_m2K",
             "depth_fraction",
@@ -110,7 +117,7 @@ def make_figure(phase_df: pd.DataFrame, outbase: Path) -> None:
             "(e) Depth fraction vs cooling",
         ),
         (
-            axes[1, 2],
+            axes[1][2],
             cool_slice,
             "cooling_h_W_per_m2K",
             "delivered_energy_J",
@@ -137,16 +144,16 @@ def make_figure(phase_df: pd.DataFrame, outbase: Path) -> None:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title, loc="left", fontweight="bold")
+        ax.margins(x=0.05)
         if ycol == "depth_fraction":
             ax.set_ylim(0.0, 1.05)
 
-    handles, labels = axes[0, 0].get_legend_handles_labels()
-    fig.legend(
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    legend_ax.legend(
         handles,
         labels,
-        ncol=2,
-        loc="lower center",
-        bbox_to_anchor=(0.5, -0.02),
+        ncol=4,
+        loc="center",
         frameon=False,
     )
     save_all(fig, outbase)

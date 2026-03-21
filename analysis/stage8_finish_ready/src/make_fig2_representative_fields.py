@@ -43,8 +43,18 @@ def make_fig2(stage3_root: Path, baseline_yaml: Path, protocols_yaml: Path, outb
         )
         results[key] = run_case(cfg)
 
-    fig = plt.figure(figsize=(11.8, 6.6))
-    gs = fig.add_gridspec(2, 3, hspace=0.18, wspace=0.12)
+    fig = plt.figure(figsize=(13.2, 7.2))
+    gs = fig.add_gridspec(
+        2,
+        4,
+        width_ratios=[1.0, 1.0, 1.0, 0.085],
+        left=0.12,
+        right=0.95,
+        top=0.88,
+        bottom=0.11,
+        hspace=0.18,
+        wspace=0.16,
+    )
 
     # Shared scales
     tmin, tmax = 37.0, max(float(np.max(results[k]["peak_T_C"])) for k in PROTOCOL_ORDER)
@@ -80,8 +90,15 @@ def make_fig2(stage3_root: Path, baseline_yaml: Path, protocols_yaml: Path, outb
         axT.set_xticks([])
         axT.set_ylim(y.max(), 0)
         axT.set_xlim(x.min(), x.max())
-        axT.text(0.02, 0.93, f"depth = {res['lesion_depth_mm']:.2f} mm", transform=axT.transAxes,
-                 fontsize=9.2, bbox=dict(boxstyle="round,pad=0.2", fc=(1,1,1,0.82), ec="none"))
+        axT.text(
+            0.98,
+            0.93,
+            f"depth = {res['lesion_depth_mm']:.2f} mm",
+            transform=axT.transAxes,
+            ha="right",
+            fontsize=9.3,
+            bbox=dict(boxstyle="round,pad=0.2", fc=(1, 1, 1, 0.82), ec="none"),
+        )
 
         # damage
         log_omega = np.log10(np.clip(res["omega"], 1e-6, None))
@@ -99,18 +116,22 @@ def make_fig2(stage3_root: Path, baseline_yaml: Path, protocols_yaml: Path, outb
         ims["T"] = imT
         ims["O"] = imO
 
-    caxT = fig.add_axes([0.92, 0.56, 0.018, 0.28])
+    caxT = fig.add_subplot(gs[0, 3])
     cbT = fig.colorbar(ims["T"], cax=caxT)
     cbT.set_label("Temperature [°C]")
 
-    caxO = fig.add_axes([0.92, 0.14, 0.018, 0.28])
+    caxO = fig.add_subplot(gs[1, 3])
     cbO = fig.colorbar(ims["O"], cax=caxO)
     cbO.set_label("log10(Arrhenius Ω)")
 
-    fig.text(0.5, 0.98, f"Representative case: wall={wall_mm:.1f} mm, h={h_W_m2K:.0f} W/m²K, insertion={insertion_mm:.2f} mm",
-             ha="center", va="top", fontsize=11.5, color=pal["text"])
-    fig.text(0.014, 0.77, "Ω = 1 contour", rotation=90, va="center", ha="center", fontsize=9.5, color="#5CE1E6")
-    fig.text(0.014, 0.33, "Ω = 1 contour", rotation=90, va="center", ha="center", fontsize=9.5, color="#F6E27A")
+    fig.suptitle(
+        f"Representative case: wall = {wall_mm:.1f} mm, h = {h_W_m2K:.0f} W/m²K, insertion = {insertion_mm:.2f} mm",
+        y=0.98,
+        fontsize=12,
+        color=pal["text"],
+    )
+    fig.text(0.045, 0.73, "Temperature field\nΩ = 1 contour", rotation=90, va="center", ha="center", fontsize=10, color="#5CE1E6")
+    fig.text(0.045, 0.29, "Damage field\nΩ = 1 contour", rotation=90, va="center", ha="center", fontsize=10, color="#F6E27A")
 
     save_pdf_png(fig, outbase)
     plt.close(fig)

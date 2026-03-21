@@ -23,8 +23,8 @@ def rounded_box(ax, xy, wh, fc, ec='none', rs=0.03, alpha=1.0):
 
 def make_fig1(outbase: Path):
     pal = apply_style()
-    fig = plt.figure(figsize=(11.8, 5.8))
-    gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.0], wspace=0.18)
+    fig = plt.figure(figsize=(12.6, 6.4))
+    gs = fig.add_gridspec(1, 2, width_ratios=[1.10, 1.0], wspace=0.22)
     ax0 = fig.add_subplot(gs[0, 0])
     ax1 = fig.add_subplot(gs[0, 1])
 
@@ -53,7 +53,7 @@ def make_fig1(outbase: Path):
 
     # Electrode
     ax0.add_patch(Rectangle((4.3, 6.25), 1.4, 0.75, fc=electrode_fc, ec=pal["spine"], lw=1.3))
-    ax0.text(5.0, 7.15, "Electrode", ha="center", fontsize=10)
+    ax0.text(5.0, 7.18, "Electrode", ha="center", fontsize=10.5)
     # insertion
     ax0.plot([5.0, 5.0], [6.25, 5.2], color=pal["spine"], lw=1.6)
     ax0.annotate("", xy=(5.35, 5.2), xytext=(5.35, 6.25), arrowprops=dict(arrowstyle='<->', color=pal["spine"], lw=1.4))
@@ -78,15 +78,15 @@ def make_fig1(outbase: Path):
     ax0.plot([1.0, 8.8], [1.1, 1.1], color=pal["spine"], lw=1.4, alpha=0.8)
     ax0.text(0.83, 5.85, "Insulated", fontsize=8.5, rotation=90, va="top")
     ax0.text(8.95, 5.85, "Insulated", fontsize=8.5, rotation=90, va="top")
-    ax0.text(8.7, 0.82, "Insulated", fontsize=8.5, ha="right")
+    ax0.text(8.7, 0.74, "Insulated", fontsize=8.5, ha="right")
 
     # Protocol chips
-    y0 = 0.55
-    xstarts = [1.2, 3.75, 6.15]
+    y0 = 0.54
+    xstarts = [1.15, 3.72, 6.10]
     for xs, key in zip(xstarts, PROTOCOL_ORDER):
         rounded_box(ax0, (xs, y0), (1.8, 0.36), fc=protocol_color(pal, key), rs=0.08)
         ax0.text(xs + 0.9, y0 + 0.18, PROTOCOL_DISPLAY[key], ha='center', va='center', fontsize=9.5, color='white')
-    ax0.text(5.0, 0.15, "Protocols compared: 30 W / 30 s, 50 W / 10 s, 90 W / 4 s", ha='center', fontsize=9.3)
+    ax0.text(5.0, 0.12, "Protocols compared: 30 W / 30 s, 50 W / 10 s, 90 W / 4 s", ha='center', fontsize=9.5)
 
     # ----- Panel b: workflow -----
     ax1.set_xlim(0, 10)
@@ -117,9 +117,9 @@ def make_fig1(outbase: Path):
     ax1.text(9.05, 7.15, "Uncertain\ncontact +\ncooling", ha="center", va="center", fontsize=9.3)
 
     # Small output icons
-    rounded_box(ax1, (8.35, 2.15), (1.25, 0.7), fc=pal["protocol_light"]["hpsd_50W_10s"], rs=0.08)
-    ax1.text(8.975, 2.5, "Fig. 5–7", ha="center", va="center", fontsize=9.4)
-    ax1.text(8.95, 1.72, "Deterministic +\nprobabilistic outputs", ha="center", va="top", fontsize=8.8)
+    rounded_box(ax1, (8.28, 2.02), (1.34, 0.72), fc=pal["protocol_light"]["hpsd_50W_10s"], rs=0.08)
+    ax1.text(8.95, 2.38, "Figs. 5-7", ha="center", va="center", fontsize=9.4)
+    ax1.text(8.92, 1.55, "Deterministic +\nprobabilistic outputs", ha="center", va="top", fontsize=8.7)
 
     save_pdf_png(fig, outbase)
     plt.close(fig)

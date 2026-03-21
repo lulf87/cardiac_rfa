@@ -6,6 +6,8 @@ import yaml
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from controller import GenericTempLimitedController
+from latency import LatencyConfig
 from model_fd import CaseConfig, clone_cfg, run_case, summarize_result
 
 
@@ -13,11 +15,23 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--base-config', required=True)
     parser.add_argument('--convergence-config', required=True)
+    parser.add_argument('--controller-config')
+    parser.add_argument('--latency-config')
     parser.add_argument('--outdir', required=True)
     args = parser.parse_args()
 
     base = CaseConfig.from_yaml(args.base_config)
     cfg_yaml = yaml.safe_load(Path(args.convergence_config).read_text())
+    controller = (
+        GenericTempLimitedController.from_yaml(args.controller_config)
+        if args.controller_config
+        else None
+    )
+    latency = (
+        LatencyConfig.from_yaml(args.latency_config)
+        if args.latency_config
+        else None
+    )
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
@@ -26,7 +40,7 @@ def main():
         nx = int(item['nx'])
         ny = int(item['ny'])
         cfg = clone_cfg(base, nx=nx, ny=ny)
-        res = run_case(cfg)
+        res = run_case(cfg, controller=controller, latency=latency)
         row = summarize_result(res)
         row['case'] = f'grid_{nx}x{ny}'
         grid_rows.append(row)
@@ -37,7 +51,7 @@ def main():
     dt_rows = []
     for dt in cfg_yaml['dt_values_s']:
         cfg = clone_cfg(base, dt_s=float(dt))
-        res = run_case(cfg)
+        res = run_case(cfg, controller=controller, latency=latency)
         row = summarize_result(res)
         row['case'] = f'dt_{float(dt):.3f}'
         dt_rows.append(row)

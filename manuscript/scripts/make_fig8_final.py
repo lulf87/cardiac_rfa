@@ -58,7 +58,13 @@ def chip(ax, text):
 
 
 def build_fig(df: pd.DataFrame):
-    fig, axes = plt.subplots(1, 2, figsize=(11.2, 5.8), facecolor=PALETTE['background'])
+    fig, axes = plt.subplots(
+        1,
+        2,
+        figsize=(11.6, 5.6),
+        facecolor=PALETTE['background'],
+        gridspec_kw={'width_ratios': [1.0, 0.96]},
+    )
 
     # (a) depth agreement scatter
     ax = axes[0]
@@ -79,12 +85,6 @@ def build_fig(df: pd.DataFrame):
         Line2D([0], [0], marker=MARKERS[p], color='none', markerfacecolor=COLORS[p],
                markeredgecolor='black', markersize=10, label=DISPLAY[p]) for p in ORDER
     ]
-    leg = ax.legend(handles=handles, title='Protocol', loc='lower right', frameon=True)
-    leg.get_frame().set_facecolor('white')
-    leg.get_frame().set_edgecolor('#b4bcc6')
-    leg.get_title().set_color(PALETTE['axis'])
-    for t in leg.get_texts():
-        t.set_color(PALETTE['axis'])
 
     # (b) protocol-level trend
     ax = axes[1]
@@ -109,7 +109,9 @@ def build_fig(df: pd.DataFrame):
     for t in leg.get_texts():
         t.set_color(PALETTE['axis'])
 
-    fig.tight_layout()
+    fig.legend(handles=handles, labels=[DISPLAY[p] for p in ORDER], title='Protocol',
+               loc='lower center', ncol=3, frameon=True, bbox_to_anchor=(0.28, 0.01))
+    fig.tight_layout(rect=[0, 0.12, 1, 1])
     return fig
 
 

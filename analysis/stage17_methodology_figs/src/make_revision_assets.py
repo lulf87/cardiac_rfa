@@ -94,16 +94,18 @@ def make_table2(baseline_yaml: Path, uq_yaml: Path, uq_df: pd.DataFrame, outdir:
 
 
 def make_figS3(uq_df: pd.DataFrame, outbase: Path) -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.3), constrained_layout=True)
+    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.5))
     for ax, prob_col, lo_col, hi_col, title in [
-        (axes[0], 'transmural_probability', 'transmural_probability_ci_low', 'transmural_probability_ci_high', '(a) Transmural probability CI half-width'),
-        (axes[1], 'overheat_probability', 'overheat_probability_ci_low', 'overheat_probability_ci_high', '(b) Overheat probability CI half-width'),
+        (axes[0], 'transmural_probability', 'transmural_probability_ci_low', 'transmural_probability_ci_high', '(a) Transmural probability'),
+        (axes[1], 'overheat_probability', 'overheat_probability_ci_low', 'overheat_probability_ci_high', '(b) Overheat probability'),
     ]:
         half = 0.5 * (uq_df[hi_col] - uq_df[lo_col])
         ax.hist(half, bins=12, color='#6C757D', edgecolor='white')
-        ax.set_xlabel('CI half-width [-]')
+        ax.set_xlabel('Wilson CI half-width [-]')
         ax.set_ylabel('Cell count')
         ax.set_title(title, loc='left', fontweight='bold')
+        ax.margins(x=0.04)
+    fig.subplots_adjust(left=0.08, right=0.99, bottom=0.17, top=0.90, wspace=0.26)
     save_all(fig, outbase)
 
 

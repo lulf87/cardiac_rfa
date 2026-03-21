@@ -1,0 +1,14 @@
+| Item | Value |
+|---|---|
+| Deterministic baseline grid | 281 × 141 |
+| Time step Δt | 0.050 s |
+| Wall thickness levels | 2.0, 3.0, 4.0, 5.0, 6.0 |
+| Nominal cooling levels h | 800.0, 1500.0, 2500.0 |
+| Nominal insertion levels | 0.5, 1.0, 1.5, 2.0 |
+| UQ samples per cell | 64 |
+| Insertion distribution | Truncated normal, mean = nominal, sd = 0.20 mm |
+| Insertion support | [0.25, 2.50] mm |
+| Cooling distribution | Truncated normal, mean = nominal, CV = 0.15 |
+| Cooling support | [300, 4000] W m^-2 K^-1 |
+| Probability interval | 95% Wilson score interval |
+| Overheat proxy threshold | Tmax ≥ 100 °C or non-zero area above 100 °C |

@@ -20,7 +20,7 @@ def main():
     grid = pd.read_csv(args.grid_csv).sort_values(["nx","ny"])
     dt = pd.read_csv(args.dt_csv).sort_values("dt_s", ascending=False)
 
-    fig, axs = plt.subplots(1, 2, figsize=(DOUBLE_COL_IN, 2.8), constrained_layout=True)
+    fig, axs = plt.subplots(1, 2, figsize=(DOUBLE_COL_IN, 3.25))
 
     ax = axs[0]
     xg = [f"{n}×{m}" for n, m in zip(grid["nx"], grid["ny"])]
@@ -30,7 +30,6 @@ def main():
     ax.set_xlabel("Grid")
     ax.set_ylabel("Relative error to finest solution [%]")
     ax.set_yscale("log")
-    ax.legend(frameon=False, fontsize=7, loc="upper right")
     panel_label(ax, "(a)")
 
     ax = axs[1]
@@ -41,8 +40,11 @@ def main():
     ax.set_xlabel("Δt [s]")
     ax.set_ylabel("Relative error to finest solution [%]")
     ax.set_yscale("log")
-    ax.legend(frameon=False, fontsize=7, loc="upper right")
     panel_label(ax, "(b)")
+
+    handles, labels = axs[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=2, frameon=False, bbox_to_anchor=(0.5, 0.98))
+    fig.subplots_adjust(left=0.09, right=0.99, bottom=0.20, top=0.78, wspace=0.30)
 
     save_figure(fig, Path(args.outdir)/"fig4_verification")
 

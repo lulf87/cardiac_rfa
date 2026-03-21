@@ -1,3 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
-echo "Placeholder only: temperature-limited smoke script for stage17."
+cd "$(dirname "$0")"
+
+if [ ! -d ".venv" ]; then
+  if command -v python3.12 >/dev/null 2>&1; then
+    echo "[INFO] create .venv with python3.12"
+    python3.12 -m venv .venv
+  else
+    echo "[INFO] python3.12 not found, fallback to python3"
+    python3 -m venv .venv
+  fi
+fi
+
+source .venv/bin/activate
+
+if ! python -c "import numpy, scipy, matplotlib, pandas, yaml" >/dev/null 2>&1; then
+  echo "[ERROR] missing dependencies."
+  echo "Please run these commands manually:"
+  echo "  source .venv/bin/activate"
+  echo "  python -m pip install -U pip"
+  echo "  python -m pip install -i https://pypi.org/simple -r requirements.txt"
+  exit 1
+fi
+
+export PYTHONPATH=src
+
+BASE_CONFIG=${BASE_CONFIG:-configs/baseline_90W_4s_4mm.yaml}
+CONTROLLER_CONFIG=${CONTROLLER_CONFIG:-configs/controller_selected_stage17.yaml}
+LATENCY_CONFIG=${LATENCY_CONFIG:-configs/latency_enabled.yaml}
+OUTDIR=${OUTDIR:-outputs/smoke_controlled_stage17}
+
+python src/run_case.py \
+  --config "$BASE_CONFIG" \
+  --controller-config "$CONTROLLER_CONFIG" \
+  --latency-config "$LATENCY_CONFIG" \
+  --outdir "$OUTDIR"

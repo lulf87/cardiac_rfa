@@ -1,0 +1,2 @@
+Data availability statement
+The authors confirm that the data supporting the findings of this study are available within the article, including Appendix A. Additional benchmark inputs used to contextualize the analyses were derived from publicly available literature cited in this article. The code and additional derived data generated in this study are available upon reasonable request.
