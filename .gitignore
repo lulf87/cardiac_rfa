@@ -1,9 +1,11 @@
 .DS_Store
 **/.DS_Store
+tmp/
 **/.venv/
 **/__pycache__/
 **/.pytest_cache/
 **/.ipynb_checkpoints/
+**/~$*.docx
 *.pyc
 *.zip
 *.tar
